@@ -1,0 +1,2958 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esport App - Final Realtime Version</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* BASE STYLES */
+        body {
+            font-family: sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 600px; 
+            margin: 0 auto; 
+        }
+
+        /* SCREEN MANAGEMENT */
+        .screen {
+            flex-grow: 1;
+            display: none; 
+            overflow-y: auto;
+            padding-bottom: 70px; 
+            width: 100%;
+        }
+
+        .screen.active {
+            display: block; 
+        }
+
+        /* --- AUTH SCREEN STYLES --- */
+        .auth-container {
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 90vh;
+            text-align: center;
+        }
+        .app-logo {
+            font-size: 60px;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+        .app-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+        .auth-input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .auth-input-group label {
+            display: block;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #282828;
+            border: 1px solid #444;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .auth-input:focus {
+            border-color: #ffd700;
+        }
+        .auth-btn {
+            background-color: #ffd700;
+            color: #121212;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .auth-secondary-btn {
+            background-color: transparent;
+            color: #007bff;
+            border: 1px solid #007bff;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .auth-link {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #888;
+        }
+        .auth-link span {
+            color: #ffd700;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- COMMON STYLES --- */
+        .header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 15px; background-color: #1a1a1a;
+            border-bottom: 1px solid #333333; position: sticky;
+            top: 0; z-index: 10;
+        }
+        .header-title { 
+            font-size: 18px; 
+            font-weight: bold; 
+            flex-grow: 1; 
+            text-align: center;
+        }
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            min-width: 100px; 
+        }
+        .header-actions { 
+            display: flex; 
+            align-items: center; 
+            min-width: 100px; 
+            justify-content: flex-end;
+        }
+        .menu-toggle { font-size: 20px; margin-right: 15px; cursor: pointer; }
+        .back-button { font-size: 20px; margin-right: 15px; cursor: pointer; }
+        .user-profile-text { font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;}
+
+        /* NOTIFICATION BADGE STYLE */
+        .notification-icon-container { position: relative; margin-right: 20px; cursor: pointer; }
+        .notification-icon { font-size: 20px; }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4d4d;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a1a1a;
+            display: none; /* Hidden by default */
+        }
+
+        .wallet-button { background-color: #ffd700; color: #121212; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 14px; display: flex; align-items: center; cursor: pointer; position: relative; }
+        .content-area { padding: 20px 15px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #e0e0e0; margin-bottom: 10px; margin-top: 20px; }
+
+        /* --- SIDE MENU STYLES --- */
+        .side-menu-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+        }
+        .side-menu-overlay.active {
+            display: block;
+        }
+        .side-menu {
+            position: fixed; top: 0; left: -80%; 
+            width: 80%; max-width: 300px; height: 100%;
+            background-color: #1a1a1a;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.7);
+            transition: left 0.3s ease-in-out;
+            z-index: 1001;
+            padding-top: 0;
+            overflow-y: auto;
+        }
+        .side-menu.open {
+            left: 0;
+        }
+        .menu-profile-card {
+            padding: 25px 15px;
+            text-align: center;
+            background-color: #ffd700;
+            color: #121212;
+            margin-bottom: 10px;
+        }
+        .menu-profile-card .avatar-header {
+            width: 60px; height: 60px;
+            font-size: 20px;
+            margin: 0 auto 10px auto;
+            background-color: #121212;
+            color: #ffd700;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        .menu-profile-card .user-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .menu-profile-card .user-uid {
+            font-size: 14px;
+            color: #444;
+        }
+        .menu-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            font-size: 16px;
+        }
+        .menu-nav-item:hover, .menu-nav-item.active {
+            background-color: #282828;
+            color: #ffd700;
+        }
+        .menu-nav-item i {
+            margin-right: 15px;
+            font-size: 20px;
+            color: #ffd700;
+        }
+        
+        /* --- SLIDER & GAMES --- */
+        .slider-container {
+            width: 100%;
+            /* YouTube Thumbnail Aspect Ratio (16:9) */
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .slide-wrapper {
+            display: flex;
+            width: 300%; 
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        .slide-item {
+            width: 33.33%; 
+            flex-shrink: 0;
+            background-color: #282828;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            line-height: 1.5;
+            position: relative;
+            cursor: pointer;
+        }
+        /* Overlay text on slider for better visibility */
+        .slide-item span {
+            z-index: 2;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .game-card {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s;
+            cursor: pointer; 
+            position: relative; /* For badge */
+        }
+        .match-tag-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ffd700;
+            color: #000;
+            padding: 2px 8px;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 4px;
+            z-index: 2;
+        }
+        .game-icon {
+            font-size: 30px;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .game-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .game-mode-subtext {
+            font-size: 11px;
+            color: #888888;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+        
+        /* --- BOTTOM NAVIGATION --- */
+        .bottom-nav { display: flex; justify-content: space-around; background-color: #1a1a1a; padding: 10px 0; border-top: 1px solid #333333; position: fixed; bottom: 0; width: 100%; max-width: 600px; margin: 0 auto; display: none; } /* Default Hidden */
+        .bottom-nav.visible { display: flex; } /* Show when logged in */
+        
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888888; font-size: 12px; text-decoration: none; padding: 5px; flex: 1; cursor: pointer; transition: color 0.3s; min-width: 60px; min-height: 40px; justify-content: center; }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+        .nav-item.active { color: #ffd700; font-weight: bold; }
+        .trophy-icon { background-color: #ffd700; color: #121212; border-radius: 50%; padding: 15px; font-size: 28px; margin-top: -30px; box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.5); border: 5px solid #1a1a1a; }
+
+        /* Wallet styles */
+        .balance-container { background-color: #1a1a1a; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .balance-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #282828; 
+            font-size: 16px; 
+        }
+        .balance-row:last-child { border-bottom: none; }
+        .balance-row > div { display: flex; align-items: center; } 
+        .balance-label { color: #888888; }
+        .balance-value { font-weight: bold; color: #ffffff; }
+        .total-balance-row .balance-value { color: #ffd700; font-size: 18px; }
+
+        .withdraw-button { 
+            background-color: #007bff; color: #ffffff; 
+            padding: 5px 10px; border-radius: 5px; 
+            font-weight: bold; font-size: 14px; 
+            cursor: pointer; border: none; 
+            z-index: 5; 
+        }
+        .add-amount-button { display: flex; justify-content: center; align-items: center; padding: 15px; background-color: #282828; color: #ffffff; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .primary-recharge-btn { background-color: #007bff; color: #ffffff; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px; width: 100%; border: none; cursor: pointer; }
+
+        
+        /* --- MATCH DETAIL STYLES --- */
+        .md-screen-bg {
+            background-color: #f0f2f5;
+            padding-top: 0; 
+            padding-bottom: 70px; 
+            color: #333; 
+        }
+        
+        #match-details-screen .header {
+            background-color: #1a1a1a; 
+            border-bottom: 1px solid #333;
+            position: sticky; 
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+        #match-details-screen .header .back-button {
+            color: #ffffff; 
+            background-color: transparent;
+        }
+        #match-details-screen .header .header-title {
+            display: block; 
+            color: #ffffff; 
+        }
+        #match-details-screen .header .wallet-button {
+            background-color: #ffd700;
+            color: #121212;
+            box-shadow: none;
+        }
+         #match-details-screen .header .notification-icon {
+            color: #ffffff; 
+            text-shadow: none;
+        }
+
+        .md-card {
+            background-color: #ffffff;
+            margin: 20px 15px 15px 15px; 
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden; 
+            position: relative; 
+            z-index: 1; 
+        }
+        
+        .md-image-container {
+            width: 100%;
+            height: 220px; 
+        }
+        .md-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .md-content-area {
+            padding: 15px;
+        }
+        
+        .md-title-area {
+            display: flex;
+            align-items: flex-start; 
+            gap: 12px; 
+            margin-bottom: 20px;
+        }
+        .md-game-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #eee;
+            flex-shrink: 0; 
+        }
+        .md-title-text-wrapper {
+            flex-grow: 1; 
+        }
+        .md-content-area #md-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #121212;
+            margin: 0;
+            line-height: 1.3;
+            padding-top: 2px; 
+        }
+        .md-content-area #md-date-time {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0 0 0; 
+        }
+
+        .md-stats-row {
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .md-stats-row:last-of-type {
+            border-bottom: none;
+        }
+        
+        .md-stat-item {
+            flex: 1; 
+        }
+        
+        .md-stat-item span {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        
+        .md-stat-item strong {
+            display: block;
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+        }
+        
+        .md-stat-item .entry-fee-color {
+            color: #f7a705; 
+        }
+
+        .md-footer-cta {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .md-progress-area {
+            flex-grow: 1;
+        }
+        
+        .md-progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .md-progress-fill {
+            height: 100%;
+            width: 0%; 
+            background-color: #f7a705; 
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .md-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .md-progress-text #md-player-count {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .md-progress-text #md-players-left-text {
+            color: #666;
+        }
+
+        .md-join-button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background-color 0.2s;
+        }
+        
+        .md-join-button.available {
+            background-color: #f7a705; 
+            color: #ffffff;
+        }
+        
+        .md-join-button.joined {
+            background-color: #00e676; 
+            color: #121212;
+        }
+        
+        .md-join-button.disabled {
+            background-color: #ff4d4d; 
+            color: #ffffff;
+            cursor: not-allowed;
+        }
+
+        /* NEW JOIN FORM STYLES */
+        .form-card {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .form-input-group { margin-bottom: 20px; }
+        .form-input-group label { display: block; font-size: 14px; color: #888; margin-bottom: 5px; }
+        .form-input { 
+            width: 100%; padding: 12px; border-radius: 5px; 
+            border: 1px solid #333; background-color: #121212; 
+            color: #ffffff; box-sizing: border-box; 
+            font-size: 16px; 
+        }
+
+        /* NEW CONFIRMATION STYLES */
+        .confirmation-card {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .confirmation-card i { font-size: 50px; color: #00e676; margin-bottom: 20px; }
+        .confirmation-card h2 { color: #e0e0e0; margin-bottom: 10px; }
+        .room-details-box {
+            background-color: #282828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .room-details-box div {
+            padding: 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .room-details-box span {
+            font-weight: normal;
+            color: #e0e0e0;
+            display: inline-block;
+            width: 100px;
+        }
+        
+        /* Modal General Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background-color: #1a1a1a;
+            width: 90%; max-width: 400px;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #e0e0e0;
+        }
+        .modal-close { cursor: pointer; font-size: 20px; }
+        
+        /* Seat Selection Modal Styles */
+        .seat-modal-content {
+            width: 90%; max-width: 450px;
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 6 seats per row */
+            gap: 8px;
+            padding: 10px;
+            background-color: #121212;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .seat-btn {
+            padding: 10px 5px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            text-align: center;
+        }
+
+        .seat-btn.available {
+            background-color: #282828;
+            color: #ffffff;
+        }
+
+        .seat-btn.available.selected {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: #ffffff;
+        }
+
+        .seat-btn.occupied {
+            background-color: #ff4d4d; /* Red for occupied */
+            color: #121212;
+            border-color: #ff4d4d;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        .seat-btn[disabled]:not(.occupied) {
+            background-color: #333333;
+            border-color: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Seat Legend */
+        .seat-legend {
+            display: flex; justify-content: space-around;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #282828;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex; align-items: center;
+            color: #e0e0e0;
+        }
+        .legend-color {
+            width: 15px; height: 15px; border-radius: 3px;
+            margin-right: 5px; border: 1px solid #333;
+        }
+        .legend-color.available { background-color: #282828; }
+        .legend-color.occupied { background-color: #ff4d4d; border-color: #ff4d4d; }
+        .legend-color.selected { background-color: #007bff; border-color: #007bff; }
+        
+        /* RECHARGE STYLES */
+        .recharge-content-area { padding: 20px 15px; }
+        .recharge-card { background-color: #1a1a1a; border-radius: 10px; padding: 25px; margin-bottom: 20px; text-align: center; }
+        
+        .amount-input-box-v2 {
+            display: flex;
+            align-items: center;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 5px 0 10px;
+            background-color: #121212;
+        }
+        .amount-input-box-v2 i {
+            font-size: 20px;
+            color: #ffd700;
+            margin-right: 10px;
+        }
+        .amount-input-box-v2 input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            width: 100px; /* Base width */
+        }
+        .amount-input-box-v2 input::-webkit-outer-spin-button,
+        .amount-input-box-v2 input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .amount-input-box-v2 input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .amount-limits { font-size: 12px; color: #888; margin-bottom: 20px; }
+        .amount-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .amount-option-btn { padding: 8px 15px; border: 1px solid #333; border-radius: 5px; font-size: 14px; cursor: pointer; transition: all 0.2s; color: #e0e0e0; background-color: #282828; }
+        .amount-option-btn.selected { border-color: #007bff; background-color: #007bff; color: #ffffff; }
+        
+        .recharge-amount-display { font-size: 24px; font-weight: bold; color: #ffd700; text-align: center; margin-bottom: 15px; }
+        .payment-method { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #333; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background-color: #282828; }
+        .payment-method.selected { border-color: #007bff; background-color: #1a1a1a; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
+        .payment-method-details { display: flex; align-items: center; font-size: 16px; font-weight: bold; }
+        
+        .payment-method-details img { 
+            height: 30px; 
+            width: 30px; 
+            margin-right: 15px; 
+            object-fit: contain; 
+        }
+        
+        .radio-button { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #888; }
+        .payment-method.selected .radio-button { border-color: #007bff; background-color: #007bff; }
+        
+        .qr-code-box { background-color: #ffffff; padding: 10px; height: 150px; width: 150px; display: flex; justify-content: center; align-items: center; font-size: 14px; color: #121212; margin: 0 auto 20px auto; border-radius: 5px; }
+        .qr-code-box img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .payment-info-v2 { text-align: center; color: #e0e0e0; margin-bottom: 20px; }
+        .payment-info-v2 div { margin-bottom: 5px; }
+        .payment-info-v2 span { color: #888; }
+        .payment-info-v2 strong { color: #ffd700; font-size: 16px; }
+
+        .action-button-row { display: flex; justify-content: space-around; margin: 15px 0 25px 0; gap: 15px; }
+        .action-button-row button { padding: 10px 15px; background-color: #ffd700; color: #121212; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex: 1; font-size: 14px; }
+        
+        .utr-section-v2 { background-color: #282828; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .utr-step { border-left: 2px solid #007bff; padding-left: 20px; position: relative; margin-bottom: 15px; }
+        .utr-step:last-child { margin-bottom: 0; }
+        .utr-step::before {
+            content: '\f058'; 
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: -10px;
+            top: 0;
+            color: #ffffff;
+            background-color: #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+        .utr-step-title { font-size: 16px; font-weight: bold; color: #e0e0e0; margin-bottom: 5px; }
+        .utr-step-desc { font-size: 12px; color: #888; }
+
+        .utr-input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #007bff; background-color: #121212; color: #ffffff; box-sizing: border-box; margin-bottom: 15px; margin-top: 15px; }
+        
+        .submit-buttons { display: flex; justify-content: space-between; gap: 10px; padding: 0; }
+        .submit-buttons .primary-recharge-btn { flex: 1; margin: 0; }
+        .submit-buttons .cancel-btn { background-color: #ff4d4d; }
+
+
+        /* Leaderboard Styles */
+        .leaderboard-tabs { display: flex; justify-content: space-around; background-color: #1a1a1a; border-radius: 8px; margin-bottom: 20px; padding: 5px; border: 1px solid #333; }
+        .tab-item { flex: 1; text-align: center; padding: 10px 5px; font-size: 14px; cursor: pointer; color: #888; font-weight: bold; transition: color 0.2s; }
+        .tab-item.active { background-color: #007bff; border-radius: 5px; color: #ffffff; }
+
+        .top-3-container { display: flex; justify-content: space-around; align-items: flex-end; text-align: center; margin-bottom: 20px; padding: 15px 0; background-color: #1a1a1a; border-radius: 10px; min-height: 150px; }
+        .top-user { flex: 1; padding: 5px; }
+        .rank-1-card { order: 2; transform: translateY(-10px); }
+        .rank-2-card { order: 1; }
+        .rank-3-card { order: 3; }
+
+        .top-rank-badge { color: #ffd700; margin-bottom: 5px; }
+        .rank-2-card .top-rank-badge { color: #C0C0C0; }
+        .rank-3-card .top-rank-badge { color: #CD7F32; }
+
+        .top-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #007bff; color: #ffffff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin: 0 auto 5px; border: 2px solid #ffd700; }
+        .rank-2-card .top-avatar { border-color: #C0C0C0; }
+        .rank-3-card .top-avatar { border-color: #CD7F32; }
+
+        .top-name { font-size: 12px; font-weight: bold; }
+        .top-winnings { font-size: 14px; color: #00e676; }
+
+        .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #333; font-size: 14px; }
+        .leaderboard-item:last-child { border-bottom: none; }
+        .rank { width: 30px; text-align: center; font-weight: bold; color: #888; }
+        .user-info { display: flex; align-items: center; flex-grow: 1; }
+        .lb-avatar { width: 30px; height: 30px; border-radius: 50%; background-color: #444; color: #ffffff; display: flex; justify-content: center; align-items: center; font-size: 12px; margin-right: 10px; }
+        .lb-name { font-weight: bold; }
+        .winnings { color: #00e676; font-weight: bold; }
+        .my-rank { background-color: #282828; border-radius: 5px; padding: 15px 10px; border: 1px solid #ffd700; margin-bottom: 10px; }
+        .my-rank .rank { color: #ffd700; }
+
+        /* Profile Styles */
+        .profile-card { 
+            background-color: #1a1a1a; 
+            border-radius: 10px; 
+            padding: 25px; 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .profile-avatar { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            background-color: #007bff; 
+            color: #ffffff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 32px; 
+            font-weight: bold; 
+            margin: 0 auto 10px; 
+        }
+        .profile-name { font-size: 20px; font-weight: bold; color: #e0e0e0; margin-bottom: 5px; }
+        .profile-name i { font-size: 14px; color: #888; margin-left: 5px; cursor: pointer; }
+        .profile-email { font-size: 14px; color: #888; margin-bottom: 20px; }
+        
+        .menu-item-list { background-color: #1a1a1a; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; padding: 0 15px;}
+        
+        .menu-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 18px 0; 
+            border-bottom: 1px solid #282828; 
+            font-size: 17px; 
+            color: #ffffff; 
+            text-decoration: none; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .menu-item:hover {
+            background-color: #222222;
+        }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item-left { display: flex; align-items: center; }
+        
+        .menu-icon { 
+            font-size: 22px; 
+            color: #007bff; 
+            margin-right: 18px; 
+        }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 45px; height: 25px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 25px; }
+        .slider:before { position: absolute; content: ""; height: 17px; width: 17px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #007bff; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Earnings Styles */
+        .earnings-summary-card { background-color: #1a1a1a; border-radius: 10px; padding: 25px; text-align: center; margin-bottom: 20px; border: 1px solid #333; }
+        .earnings-icon { font-size: 36px; color: #00e676; margin-bottom: 10px; }
+        .earnings-description { font-size: 14px; color: #888; margin-bottom: 20px; }
+        .earnings-data-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #282828; font-size: 16px; }
+        .data-label { color: #888; }
+        .data-value { font-weight: bold; color: #ffffff; }
+        .data-value.total { color: #00e676; font-size: 18px; }
+        .view-history-link { display: block; margin-top: 15px; color: #007bff; font-size: 14px; text-decoration: none; font-weight: bold; }
+
+        /* Transaction History on Wallet Screen */
+        .transaction-title { font-size: 18px; font-weight: bold; color: #e0e0e0; margin-top: 20px; margin-bottom: 10px; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #282828; }
+        .transaction-details .title { font-weight: bold; font-size: 14px; }
+        .transaction-details .date { font-size: 12px; color: #888; }
+        .transaction-amount { font-weight: bold; font-size: 16px; color: #ff4d4d; }
+        .history-link { color: #007bff; font-size: 14px; text-decoration: none; }
+        .wallet-history-buttons { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+        .wallet-history-btn { flex: 1; padding: 12px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; border: none; cursor: pointer; transition: background-color 0.2s; background-color: #282828; color: #888; }
+        .wallet-history-btn.active-history-btn { background-color: #ffd700; color: #121212; }
+        
+        /* WITHDRAWAL MODAL */
+        .balance-info { font-size: 14px; color: #888; margin-bottom: 20px; text-align: center; }
+        .modal-input-group { margin-bottom: 20px; }
+        .modal-input-group label { display: block; font-size: 14px; color: #888; margin-bottom: 5px; }
+        .modal-input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #333; background-color: #121212; color: #ffffff; box-sizing: border-box; font-size: 16px; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
+        .modal-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .modal-btn.cancel-btn { background-color: #444; color: #ffffff; }
+        .modal-btn.cancel-btn:hover { background-color: #555; }
+        .modal-btn.submit-btn { background-color: #007bff; color: #ffffff; }
+        .modal-btn.submit-btn:hover { background-color: #0056b3; }
+
+        /* REFER & EARN */
+        .refer-card { background-color: #1a1a1a; border-radius: 10px; padding: 25px; text-align: center; margin-bottom: 20px; border: 1px solid #333; }
+        .refer-code-box { background-color: #282828; border: 1px dashed #ffd700; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center; cursor: pointer; }
+        .refer-code-box:active { background-color: #333; border-color: #fff; }
+        .refer-code-box span { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
+        .refer-code-box .code-line { display: flex; justify-content: space-between; align-items: center; }
+        .refer-code-box strong { font-size: 20px; color: #ffd700; font-family: monospace; }
+        .copy-btn { background-color: #007bff; color: #ffffff; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+        
+        .refer-link-box { background-color: #282828; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: left; cursor: pointer; }
+        .refer-link-box:active { background-color: #333; }
+        .refer-link-box span { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
+        .refer-link-box .link-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .refer-link-box .link-line span { font-size: 14px; color: #e0e0e0; word-break: break-all; }
+
+        .social-share-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
+        .social-share-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 10px; background-color: #1a1a1a; border-radius: 8px; text-decoration: none; color: #e0e0e0; font-size: 12px; font-weight: bold; transition: transform 0.2s; cursor: pointer; }
+        .social-share-btn:hover { transform: translateY(-3px); }
+        .social-share-btn i { font-size: 24px; margin-bottom: 8px; }
+        .social-share-btn.whatsapp i { color: #25D366; }
+        .social-share-btn.telegram i { color: #0088cc; }
+        .social-share-btn.facebook i { color: #1877F2; }
+        .social-share-btn.more i { color: #888; }
+        
+        .rules-btn {
+            background: #282828;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- UPDATE MODAL (FORCE) -->
+    <div id="update-modal" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content" style="text-align: center;">
+            <i class="fas fa-rocket" style="font-size: 50px; color: #ffd700; margin-bottom: 20px;"></i>
+            <h2 style="color: #ffd700; margin-bottom: 10px;">New Update Available!</h2>
+            <p id="update-msg-text" style="color: #ccc; margin-bottom: 25px;">Please update the app to continue playing.</p>
+            <button class="primary-recharge-btn" onclick="openUpdateLink()">UPDATE NOW</button>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION SCREENS -->
+
+    <!-- 1. Welcome Screen -->
+    <div id="welcome-screen" class="screen active">
+        <div class="auth-container">
+            <i class="fas fa-gamepad app-logo"></i>
+            <div class="app-name">FFW ESPORTS</div>
+            <p style="color: #ccc; margin-bottom: 40px;">Play games, compete in tournaments and earn real rewards.</p>
+            
+            <button class="auth-btn" onclick="goToScreen('login-screen')">Login</button>
+            <button class="auth-secondary-btn" onclick="goToScreen('signup-screen')">Create Account</button>
+        </div>
+    </div>
+
+    <!-- 2. Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="auth-container">
+            <h2 style="color: #ffd700; margin-bottom: 30px;">Welcome Back</h2>
+            
+            <div class="auth-input-group">
+                <label>Phone Number / Email</label>
+                <input type="text" id="login-contact" class="auth-input" placeholder="Enter Phone or Email">
+            </div>
+            
+            <div class="auth-input-group">
+                <label>Password</label>
+                <input type="password" id="login-password" class="auth-input" placeholder="Enter your password">
+            </div>
+
+            <div style="text-align: right; margin-bottom: 20px; font-size: 14px; color: #007bff; cursor: pointer;">Forgot Password?</div>
+
+            <button class="auth-btn" onclick="handleLogin()">Login</button>
+            
+            <div class="auth-link">
+                Don't have an account? <span onclick="goToScreen('signup-screen')">Sign Up</span>
+            </div>
+            <div class="auth-link" style="margin-top: 30px;">
+                <span onclick="goToScreen('welcome-screen')" style="color: #666; font-weight: normal;"><i class="fas fa-arrow-left"></i> Back</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Sign Up Screen -->
+    <div id="signup-screen" class="screen">
+        <div class="auth-container" style="padding-top: 20px;">
+            <h2 style="color: #ffd700; margin-bottom: 20px;">Create Account</h2>
+            
+            <div class="auth-input-group">
+                <label>Full Name</label>
+                <input type="text" id="signup-name" class="auth-input" placeholder="Enter full name">
+            </div>
+
+            <div class="auth-input-group">
+                <label>Phone Number / Email</label>
+                <input type="text" id="signup-contact" class="auth-input" placeholder="Enter Phone or Email Address">
+            </div>
+            
+            <div class="auth-input-group">
+                <label>Password</label>
+                <input type="password" id="signup-password" class="auth-input" placeholder="Create password">
+            </div>
+
+            <div class="auth-input-group">
+                <label>Referral Code (Optional)</label>
+                <input type="text" id="signup-referral" class="auth-input" placeholder="Referral Code">
+            </div>
+
+            <button class="auth-btn" onclick="handleSignup()">Sign Up</button>
+            
+            <div class="auth-link">
+                Already have an account? <span onclick="goToScreen('login-screen')">Login</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="side-menu-overlay" class="modal-overlay" onclick="toggleSideMenu()">
+        <div id="side-menu" class="side-menu" onclick="event.stopPropagation()">
+            <div class="menu-profile-card">
+                <div class="avatar-header" id="menu-avatar">MW</div>
+                <div class="user-name" id="menu-username">MD WASIM</div>
+                <div class="user-uid">UID: <span id="user-uid-display">Loading...</span></div>
+            </div>
+
+            <a class="menu-nav-item" data-screen="home-screen" onclick="navigateToScreen('home-screen')"> <i class="fas fa-home"></i> Home </a>
+            <a class="menu-nav-item" data-screen="wallet-screen" onclick="navigateToScreen('wallet-screen')"> <i class="fas fa-wallet"></i> Wallet </a>
+            <a class="menu-nav-item" data-screen="leaderboard-screen" onclick="navigateToScreen('leaderboard-screen')"> <i class="fas fa-trophy"></i> Leaderboard </a>
+            <a class="menu-nav-item" data-screen="earnings-screen" onclick="navigateToScreen('earnings-screen')"> <i class="fas fa-dollar-sign"></i> Earnings </a>
+            <a class="menu-nav-item" data-screen="profile-screen" onclick="navigateToScreen('profile-screen')"> <i class="fas fa-user"></i> Profile </a>
+            
+            <hr style="border-color: #282828; margin: 10px 20px;">
+            
+            <a class="menu-nav-item" style="color: #ff4d4d;" onclick="handleLogout()"> <i class="fas fa-sign-out-alt" style="color: #ff4d4d;"></i> Logout </a>
+
+        </div>
+    </div>
+    
+    <!-- NOTIFICATIONS SCREEN -->
+    <div id="notifications-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('home-screen')"></i>
+            </div>
+            <div class="header-title">Notifications</div>
+             <div class="header-actions"></div>
+        </div>
+        <div class="content-area" id="notification-list">
+             <div style="text-align:center; color:#888; padding:20px;">Loading...</div>
+        </div>
+    </div>
+
+    <div id="home-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSideMenu()"></i>
+                <div class="user-profile-text" id="header-username">Hi, User</div>
+            </div>
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge-home" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> <i class="fas fa-wallet" style="margin-right: 5px;"></i> ₹<span id="header-balance">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            
+            <div class="slider-container">
+                <div class="slide-wrapper" id="home-slider-wrapper">
+                    <!-- Dynamic Slides Loaded Here -->
+                    <div class="slide-item">Loading...</div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 0;">Popular Games</div>
+            
+            <div class="game-grid" id="dynamic-game-grid">
+                <!-- Matches will load here from Firebase -->
+                <div style="color: #888; text-align: center; grid-column: span 2;">Loading Matches...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="match-details-screen" class="screen md-screen-bg">
+        
+        <div class="header"> 
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('home-screen')"></i> 
+            </div>
+            <div class="header-title">Match Details</div> 
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon" style="color: white; text-shadow: none;"></i>
+                    <span id="notif-badge-details" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> 
+                    <i class="fas fa-wallet" style="margin-right: 5px;"></i> 
+                    ₹<span id="header-balance-details">10</span> 
+                </div>
+            </div>
+        </div>
+        
+        <div class="md-card">
+                
+                <div class="md-image-container">
+                    <img id="md-image" src="" alt="Match Image">
+                </div>
+                
+                <div class="md-content-area">
+                    
+                    <div class="md-title-area">
+                        <img id="md-game-icon" src="" class="md-game-icon" alt="Game Icon">
+                        <div class="md-title-text-wrapper">
+                            <h3 id="md-title">Loading Match...</h3>
+                            <p id="md-date-time">Loading date and time...</p>
+                        </div>
+                    </div>
+
+                    <button class="rules-btn" onclick="showRulesModal()"> <i class="fas fa-scroll"></i> 📜 READ RULES</button>
+
+                    <div class="md-stats-row">
+                        <div class="md-stat-item">
+                            <span>Price Pool</span>
+                            <strong id="md-prize-pool">₹0</strong>
+                        </div>
+                        <div class="md-stat-item">
+                            <span>Per Kill</span>
+                            <strong id="md-per-kill">₹0</strong>
+                        </div>
+                        <div class="md-stat-item">
+                            <span>Entry Fee</span>
+                            <strong id="md-entry-fee" class="entry-fee-color">₹0</strong>
+                        </div>
+                    </div>
+
+                    <div class="md-stats-row">
+                        <div class="md-stat-item">
+                            <span>Type</span>
+                            <strong id="md-type">N/A</strong>
+                        </div>
+                        <div class="md-stat-item">
+                            <span>Version</span>
+                            <strong id="md-version">N/A</strong>
+                        </div>
+                        <div class="md-stat-item">
+                            <span>Map</span>
+                            <strong id="md-map">N/A</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md-footer-cta">
+                    <div class="md-progress-area">
+                        <div class="md-progress-bar">
+                            <div id="md-player-progress-bar" class="md-progress-fill"></div>
+                        </div>
+                        <div class="md-progress-text">
+                            <span id="md-player-count">0/0</span>
+                            <span id="md-players-left-text">Loading...</span>
+                        </div>
+                    </div>
+                    <button id="md-join-button" class="md-join-button available">JOIN</button>
+                </div>
+            </div>
+
+        <div class="room-details-container" id="room-details-container-1" style="display: none;"></div>
+
+    </div>
+    
+    <div id="match-join-form-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('match-details-screen')"></i>
+            </div>
+            <div class="header-title">Confirm Joining</div>
+            <div class="header-actions">
+                <div class="wallet-button"> ₹<span id="header-balance-form">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="form-card">
+                <h3 id="join-form-match-title" style="margin-top: 0; color: #ffd700;"></h3>
+                <p style="font-size: 14px; color: #888; margin-bottom: 20px;" id="join-form-match-info"></p>
+                
+                <div class="form-input-group">
+                    <label for="game-uid">Game UID / Player ID</label>
+                    <input type="number" id="game-uid" class="form-input" placeholder="Your 6 digit Game ID" required>
+                </div>
+                
+                <div class="form-input-group">
+                    <label for="username">FF GAME NAME </label>
+                    <input type="text" id="username" class="form-input" placeholder="Your Game Name" required>
+                </div>
+                
+                <div id="seat-selection-display" style="background-color: #282828; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 16px;">Seats Selected: <span id="selected-seats-text" style="color: #ffd700;">N/A</span></div>
+                    <div style="font-size: 12px; color: #888;">(Seats were selected in the previous step)</div>
+                </div>
+
+                <p style="font-size: 12px; color: #888;">By clicking "Confirm Join", you agree to deduct the entry fee from your wallet and accept the match rules. </p>
+                <button class="primary-recharge-btn" onclick="processJoin(currentMatchId)">Confirm Join</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="match-joined-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('home-screen')"></i>
+            </div>
+            <div class="header-title">Match Joined</div>
+            <div class="header-actions">
+                <div class="wallet-button"> ₹<span id="header-balance-joined">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="confirmation-card">
+                <i class="fas fa-check-circle"></i>
+                <h2 style="color: #00e676;">Successfully Joined!</h2>
+                <p style="color: #888;">Match: <span id="joined-match-title"></span></p>
+                <p style="color: #888;">Seats Booked: <span id="joined-seats-list"></span></p>
+                
+                <div class="room-details-box">
+                    <div style="font-size: 18px; color: #ffd700;"> Room Details </div>
+                    <p style="font-size: 12px; color: #ccc;" id="joined-room-text-display">Loading...</p>
+                    <div id="joined-room-id-container" style="display:none;"> <span>Room ID:</span> <span id="display-room-id" style="font-weight:bold; color:white;"></span> </div>
+                    <div id="joined-room-pass-container" style="display:none;"> <span>Password:</span> <span id="display-room-pass" style="font-weight:bold; color:white;"></span> </div>
+                </div>
+                
+                <button class="primary-recharge-btn" onclick="goToScreen('home-screen')" style="margin-top: 20px; background-color: #ffd700; color: #121212;">Go to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="wallet-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSideMenu()"></i>
+            </div>
+            <div class="header-title">Wallet</div>
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge-wallet" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button"> ₹<span id="header-balance-wallet">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="balance-container">
+                <div class="balance-row total-balance-row">
+                    <span class="balance-label">Total Balance:</span>
+                    <span class="balance-value">₹<span id="wallet-total-balance">10.00</span></span>
+                </div>
+                <div class="balance-row">
+                    <span class="balance-label">Winnings:</span>
+                    <span class="balance-value">₹<span id="wallet-winning-balance">0.00</span></span>
+                    <button class="withdraw-button" onclick="showWithdrawalModal()">Withdraw</button>
+                </div>
+                <div class="balance-row" style="border-bottom: none;">
+                    <span class="balance-label">Deposit (Play only):</span>
+                    <span class="balance-value">₹<span id="wallet-deposit-balance">10.00</span></span>
+                </div>
+                <div class="add-amount-button" onclick="goToRechargeStep(1)">
+                    <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> RECHARGE NOW
+                </div>
+            </div>
+
+            <div class="transaction-title">Transaction History</div>
+            <div class="wallet-history-buttons">
+                <button class="wallet-history-btn deposit" onclick="loadTransactionHistory('deposit')">Deposit History</button>
+                <button class="wallet-history-btn withdrawal" onclick="loadTransactionHistory('withdrawal')">Withdrawal History</button>
+            </div>
+            <div id="wallet-history-list" style="padding-bottom: 20px;">
+                <div style="text-align: center; padding: 20px 10px; color: #888;">
+                    Select a category above to view history.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="leaderboard-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSideMenu()"></i>
+            </div>
+            <div class="header-title">Leaderboard</div>
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge-leaderboard" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> <i class="fas fa-wallet" style="margin-right: 5px;"></i> ₹<span id="header-balance-leaderboard">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="leaderboard-tabs">
+                <div class="tab-item active" data-board="daily-leaderboard">Top Coin Holders</div>
+            </div>
+            
+            <div id="lb-top-3-container" class="top-3-container">
+                <!-- TOP 3 WILL LOAD HERE REALTIME -->
+                <div style="color:#888; align-self:center;">Loading Top Players...</div>
+            </div>
+
+            <div class="my-rank">
+                <div style="font-size: 14px; color: #ffd700; margin-bottom: 5px;">Your Rank:</div>
+                <div class="leaderboard-item">
+                    <div class="rank" id="my-rank-num">--</div>
+                    <div class="user-info">
+                        <div class="lb-avatar" id="lb-user-avatar">MW</div>
+                        <div class="lb-name" id="lb-user-name">MD WASIM (YOU)</div>
+                    </div>
+                    <div class="winnings" id="my-rank-bal">₹0</div>
+                </div>
+            </div>
+
+            <div id="leaderboard-list-rest" class="leaderboard-list">
+                 <!-- REST PLAYERS LOAD HERE -->
+            </div>
+
+        </div>
+    </div>
+    
+    <div id="profile-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSideMenu()"></i>
+            </div>
+            <div class="header-title">Profile</div>
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge-profile" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> <i class="fas fa-wallet" style="margin-right: 5px;"></i> ₹<span id="header-balance-profile">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="profile-card">
+                <div class="profile-avatar" id="profile-avatar-main">MW</div>
+                <div class="profile-name"><span id="profile-name-main">MD WASIM</span> <i class="fas fa-pencil-alt"></i></div>
+                <div class="profile-email">UID: <span id="profile-uid-display">Loading...</span></div>
+                <div style="font-size: 14px; color: #888; margin-bottom: 20px;" id="profile-contact-display">user@example.com</div>
+            </div>
+
+            <div class="menu-item-list">
+                
+                <div class="menu-item">
+                    <div class="menu-item-left">
+                        <i class="fas fa-bell menu-icon"></i> Notifications
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <a href="#" class="menu-item">
+                    <div class="menu-item-left">
+                        <i class="fas fa-user-edit menu-icon" style="color: #ffd700;"></i> Edit Profile
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </a>
+
+                <a href="#" class="menu-item">
+                    <div class="menu-item-left">
+                        <i class="fas fa-history menu-icon" style="color: #00e676;"></i> Match History
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </a>
+                
+                <div class="menu-item" onclick="goToScreen('refer-screen')">
+                    <div class="menu-item-left">
+                        <i class="fas fa-user-plus menu-icon" style="color: #007bff;"></i> Refer & Earn
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </div>
+
+                <a href="#" class="menu-item">
+                    <div class="menu-item-left">
+                        <i class="fas fa-headset menu-icon" style="color: #00e676;"></i> Contact Support
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </a>
+
+                <a href="#" class="menu-item">
+                    <div class="menu-item-left">
+                        <i class="fas fa-file-alt menu-icon" style="color: #ff4d4d;"></i> Terms & Conditions
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </a>
+
+                <a class="menu-item" style="color: #ff4d4d;" onclick="handleLogout()">
+                    <div class="menu-item-left">
+                        <i class="fas fa-sign-out-alt menu-icon" style="color: #ff4d4d;"></i> Logout
+                    </div>
+                    <i class="fas fa-chevron-right" style="font-size: 14px; color: #888;"></i>
+                </a>
+            </div>
+            
+            </div>
+    </div>
+    
+    <div id="earnings-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-toggle" onclick="toggleSideMenu()"></i>
+            </div>
+            <div class="header-title">Earnings</div>
+            <div class="header-actions">
+                <div class="notification-icon-container" onclick="openNotifications()">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge-earnings" class="notification-badge"></span>
+                </div>
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> <i class="fas fa-wallet" style="margin-right: 5px;"></i> ₹<span id="header-balance-earnings">10</span> </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="earnings-summary-card">
+                <div class="earnings-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="earnings-description">
+                    Track your earnings from tournaments and referrals here.
+                </div>
+                <div class="earnings-data-row">
+                    <span class="data-label">Total Earned:</span>
+                    <span class="data-value total">₹0.00</span>
+                </div>
+                <div class="earnings-data-row" style="border-bottom: none; margin-bottom: 0;">
+                    <span class="data-label">From Referrals:</span>
+                    <span class="data-value">₹0.00</span>
+                </div>
+                <a href="#" class="view-history-link">View History</a>
+            </div>
+            
+            <div class="section-title">Latest Transactions</div>
+            <div style="text-align: center; padding: 20px 10px; color: #888;">
+                No earnings transactions found.
+            </div>
+        </div>
+    </div>
+
+    <div id="refer-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('profile-screen')"></i>
+            </div>
+            <div class="header-title">Refer & Earn</div>
+            <div class="header-actions">
+                <div class="wallet-button" onclick="goToScreen('wallet-screen')"> 
+                    <i class="fas fa-wallet" style="margin-right: 5px;"></i> 
+                    ₹<span id="header-balance-refer">10</span> 
+                </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div class="refer-card">
+                <i class="fas fa-gift" style="font-size: 40px; color: #ffd700; margin-bottom: 15px;"></i>
+                <h3 style="margin-top: 0;">Invite Friends, Earn Rewards!</h3>
+                <p style="color: #888; font-size: 14px;">Share your referral code with friends. When they sign up, you both get a bonus!</p>
+                
+                <div class="refer-code-box" onclick="copyReferralCode()">
+                    <span>Your Referral Code (Tap to Copy)</span>
+                    <div class="code-line">
+                        <strong id="refer-code-display">LOADING...</strong>
+                        <button class="copy-btn"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <div class="refer-link-box" onclick="copyReferralLink()">
+                    <span>Your Referral Link (Tap to Copy)</span>
+                    <div class="link-line">
+                        <span id="refer-link-display">Loading App Link...</span>
+                        <button class="copy-btn"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Share via</div>
+            <div class="social-share-grid">
+                <div class="social-share-btn whatsapp" onclick="shareToSocial('whatsapp')"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+                <div class="social-share-btn telegram" onclick="shareToSocial('telegram')"><i class="fab fa-telegram-plane"></i><span>Telegram</span></div>
+                <div class="social-share-btn facebook" onclick="shareToSocial('facebook')"><i class="fab fa-facebook-f"></i><span>Facebook</span></div>
+                <div class="social-share-btn more" onclick="shareToSocial('more')"><i class="fas fa-share-alt"></i><span>More</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="recharge-step-1" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToScreen('wallet-screen')"></i>
+            </div>
+            <div class="header-title">Recharge</div>
+            <div class="header-actions">
+                <div class="wallet-button"> ₹<span id="header-balance-recharge1">10</span> </div>
+            </div>
+        </div>
+        <div class="recharge-content-area">
+            <div class="recharge-card">
+                <span style="font-size: 14px; color: #888;">Total Balance</span>
+                <div style="font-size: 20px; font-weight: bold; color: #ffd700; margin-bottom: 20px;">₹<span id="recharge-current-balance">10.00</span></div>
+                
+                <span style="font-size: 14px; color: #888;">Amount</span>
+                
+                <div class="amount-input-box-v2">
+                    <i class="fas fa-rupee-sign"></i>
+                    <input type="number" id="custom-recharge-amount" placeholder="10 - 1000">
+                </div>
+                <div class="amount-limits">Minimum: ₹10 | Maximum: ₹1000</div>
+                
+                <div class="amount-options">
+                    <div class="amount-option-btn selected" data-amount="20">₹20</div>
+                    <div class="amount-option-btn" data-amount="50">₹50</div>
+                    <div class="amount-option-btn" data-amount="100">₹100</div>
+                    <div class="amount-option-btn" data-amount="200">₹200</div>
+                    <div class="amount-option-btn" data-amount="500">₹500</div>
+                    <div class="amount-option-btn" data-amount="1000">₹1000</div>
+                </div>
+                
+            </div>
+            
+            <button id="recharge-step-1-next" class="primary-recharge-btn" style="background-color: #007bff;">Recharge</button>
+        </div>
+    </div>
+    
+    <div id="recharge-step-2" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToRechargeStep(1)"></i>
+            </div>
+            <div class="header-title">Payment Method</div>
+            <div class="header-actions">
+                <div class="wallet-button"> ₹<span id="header-balance-recharge2">10</span> </div>
+            </div>
+        </div>
+        <div class="recharge-content-area">
+            <div class="recharge-amount-display">
+                Recharge Amount: ₹<span id="display-recharge-amount-2">20</span>.00
+            </div>
+            
+            <div class="section-title" style="margin-top: 0;">Select Payment Method</div>
+            
+            <div class="payment-method selected" data-method="phonepe">
+                <div class="payment-method-details">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/768px-PhonePe_Logo.svg.png" alt="PhonePe">
+                    PhonePe
+                </div>
+                <div class="radio-button"></div>
+            </div>
+            
+            <div class="payment-method" data-method="paytm">
+                <div class="payment-method-details">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Paytm_Logo.svg/1200px-Paytm_Logo.svg.png" alt="Paytm">
+                    Paytm
+                </div>
+                <div class="radio-button"></div>
+            </div>
+
+            <div class="payment-method" data-method="gpay">
+                <div class="payment-method-details">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/1200px-Google_Pay_Logo.svg.png" alt="GPay">
+                    GPay
+                </div>
+                <div class="radio-button"></div>
+            </div>
+            
+            <button id="recharge-step-2-next" class="primary-recharge-btn" style="background-color: #007bff; margin-top: 20px;">Process to Pay</button>
+        </div>
+    </div>
+    
+    <div id="recharge-step-3" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <i class="fas fa-arrow-left back-button" onclick="goToRechargeStep(2)"></i>
+            </div>
+            <div class="header-title">Complete Payment</div>
+            <div class="header-actions">
+                <div class="wallet-button"> ₹<span id="header-balance-recharge3">10</span> </div>
+            </div>
+        </div>
+        <div class="recharge-content-area">
+            <div class="recharge-amount-display">
+                Recharge Amount: ₹<span id="display-recharge-amount-3">20</span>.00
+            </div>
+            
+            <div class="recharge-card" style="padding: 20px;">
+                
+                <div class="qr-code-box"> 
+                    <img id="qr-code-image" src="" alt="QR Code Loading...">
+                </div>
+
+                <div class="payment-info-v2">
+                    <div><span>Payment Mode:</span> <strong id="payment-mode-display">PhonePe</strong></div>
+                    <div><span>Upi id:</span> <strong id="upi-id-display">Loading...</strong></div>
+                </div>
+                
+                <div class="action-button-row">
+                    <button onclick="copyToClipboard(currentRechargeAmount)">Copy Amt</button>
+                    <button onclick="copyToClipboard(document.getElementById('upi-id-display').textContent)">Copy UPI</button>
+                </div>
+                
+                <div class="utr-section-v2">
+                    <div class="utr-step">
+                        <div class="utr-step-title">Enter Payment UTR</div>
+                        <div class="utr-step-desc">After paying, enter the transaction ID (UTR) below.</div>
+                    </div>
+                    <input type="number" id="utr-input" class="utr-input" placeholder="Enter 12 digit UTR/Ref. No. here...">
+                    <div class="utr-step">
+                        <div class="utr-step-title">Submit</div>
+                        <div class="utr-step-desc">Our agent will verify your payment shortly.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-buttons">
+                <button class="primary-recharge-btn cancel-btn" onclick="goToScreen('wallet-screen')">Cancel</button>
+                <button class="primary-recharge-btn submit-btn" onclick="submitRecharge()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav (Hidden on Auth Screens) -->
+    <div class="bottom-nav" id="bottom-nav-bar">
+        <a id="nav-home" class="nav-item active" data-screen="home-screen">
+            <i class="fas fa-home nav-icon"></i> Home
+        </a>
+        <a id="nav-wallet" class="nav-item" data-screen="wallet-screen">
+            <i class="fas fa-wallet nav-icon"></i> Wallet
+        </a>
+        <a id="nav-leaderboard" class="nav-item" data-screen="leaderboard-screen">
+            <i class="fas fa-trophy trophy-icon"></i> 
+        </a>
+        <a id="nav-earnings" class="nav-item" data-screen="earnings-screen">
+            <i class="fas fa-dollar-sign nav-icon"></i> Earnings
+        </a>
+        <a id="nav-profile" class="nav-item" data-screen="profile-screen">
+            <i class="fas fa-user nav-icon"></i> Profile
+        </a>
+    </div>
+
+    <div id="seat-selection-modal" class="modal-overlay">
+        <div class="modal-content seat-modal-content">
+            <div class="modal-header">
+                Seat Selection (Team Size: <span id="modal-team-size"></span>)
+                <i class="fas fa-times modal-close" onclick="hideSeatSelectionModal()"></i>
+            </div>
+
+            <div class="seat-legend">
+                <div class="legend-item"><span class="legend-color available"></span> Available</div>
+                <div class="legend-item"><span class="legend-color occupied"></span> Occupied</div>
+                <div class="legend-item"><span class="legend-color selected"></span> Selected</div>
+            </div>
+
+            <div id="seat-grid" class="seat-grid">
+                </div>
+            
+            <div id="modal-selected-seats-info" style="font-size: 14px; color: #e0e0e0; margin-bottom: 15px; text-align: center;">
+                Select a starting seat to book a block of <span id="modal-team-size-2"></span> seats.
+            </div>
+
+            <button class="primary-recharge-btn" onclick="goToFormFromSeats()" style="background-color: #007bff;" id="confirm-seats-btn" disabled>
+                CONFIRM SEATS
+            </button>
+        </div>
+    </div>
+
+    <div id="withdrawal-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                Withdraw Winnings
+                <i class="fas fa-times modal-close" onclick="hideWithdrawalModal()"></i>
+            </div>
+            <p class="balance-info">Available Winnings: ₹<span id="modal-withdraw-bal">0.00</span></p>
+            
+            <div class="modal-input-group">
+                <label for="withdraw-details">UPI ID / Phone Number</label>
+                <input type="text" id="withdraw-details" class="modal-input" placeholder="e.g. 9876543210 or user@upi">
+            </div>
+
+            <div class="modal-input-group">
+                <label for="withdraw-amount">Amount (Min: ₹50)</label>
+                <input type="number" id="withdraw-amount" class="modal-input" placeholder="Enter amount to withdraw">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel-btn" onclick="hideWithdrawalModal()">Cancel</button>
+                <button class="modal-btn submit-btn" onclick="submitWithdrawal()">Withdraw</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MATCH RULES MODAL -->
+    <div id="rules-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                Match Rules
+                <i class="fas fa-times modal-close" onclick="hideRulesModal()"></i>
+            </div>
+            <div id="rules-text-content" style="white-space: pre-line; line-height: 1.5; color: #ccc;">
+                No rules found.
+            </div>
+            <button class="modal-btn submit-btn" onclick="hideRulesModal()" style="margin-top: 15px; width: 100%;">OK</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK & APP LOGIC -->
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, arrayUnion, increment, onSnapshot, deleteDoc, query, where, getDocs, limit, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- PASTE_YOUR_FIREBASE_CONFIG_HERE ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyDLhQRD3aBQn5-5XssgPTAUpQsUPTiO1ks",
+  authDomain: "admintournament-b9a86.firebaseapp.com",
+  databaseURL: "https://admintournament-b9a86-default-rtdb.firebaseio.com",
+  projectId: "admintournament-b9a86",
+  storageBucket: "admintournament-b9a86.firebasestorage.app",
+  messagingSenderId: "314261082652",
+  appId: "1:314261082652:web:dd47b8f8753506445c05d9",
+  measurementId: "G-CEVT670DYB"
+};
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- APP VERSION CONTROL ---
+        const CURRENT_APP_VERSION = "1.0"; // CHANGE THIS WHEN RELEASING NEW HTML FILE
+        window.appUpdateLink = "#";
+
+        // Global variables attached to window for HTML access
+        window.currentUserData = null; 
+        window.currentRechargeAmount = 20; 
+        window.currentMatchId = null;
+        window.selectedSeatBlock = [];
+        window.appSettings = { sliders: [], payments: {}, referral: {} };
+        // Holds dynamic matches from Firestore
+        window.matchData = {};
+
+        // --- APP UPDATE LISTENER ---
+        onSnapshot(doc(db, "settings", "app_config"), (s) => {
+            if(s.exists()) {
+                const config = s.data();
+                const latest = config.latestVersion || "1.0";
+                window.appUpdateLink = config.updateLink || "#";
+                
+                // Compare Versions
+                if(parseFloat(latest) > parseFloat(CURRENT_APP_VERSION)) {
+                    document.getElementById('update-msg-text').textContent = config.updateMessage || "Please update to continue.";
+                    document.getElementById('update-modal').classList.add('active');
+                } else {
+                    document.getElementById('update-modal').classList.remove('active');
+                }
+            }
+        });
+        
+        window.openUpdateLink = function() {
+            if(window.appUpdateLink && window.appUpdateLink !== "#") {
+                window.open(window.appUpdateLink, '_blank');
+            } else {
+                alert("Update link not configured correctly.");
+            }
+        }
+
+        // --- APP SETTINGS LISTENERS (Slider, Payment, Referral) ---
+        onSnapshot(doc(db, "settings", "sliders"), (docSnap) => {
+            if(docSnap.exists()) {
+                window.appSettings.sliders = docSnap.data().list || [];
+                renderUserSlider();
+            }
+        });
+
+        onSnapshot(doc(db, "settings", "payment"), (docSnap) => {
+            if(docSnap.exists()) {
+                window.appSettings.payments = docSnap.data();
+            }
+        });
+        
+        onSnapshot(doc(db, "settings", "referral"), (docSnap) => {
+            if(docSnap.exists()) {
+                window.appSettings.referral = docSnap.data();
+                // Update Link if user is logged in
+                if(window.currentUserData) {
+                   const link = window.appSettings.referral.appLink || "https://myapp.com";
+                   const refId = window.currentUserData.uid || window.currentUserData.id;
+                   document.getElementById('refer-link-display').textContent = `${link}?ref=${refId}`;
+                }
+            }
+        });
+        
+        // --- REALTIME LEADERBOARD LISTENER ---
+        function initLeaderboardListener() {
+            // Sort by 'totalBalance' (computed or field) - Using 'balance' for total usually
+            const q = query(collection(db, "users"), orderBy("balance", "desc"), limit(50));
+            onSnapshot(q, (snapshot) => {
+                const users = snapshot.docs.map(d => {
+                    let u = d.data();
+                    // Fallback calc
+                    if(u.deposit === undefined) u.deposit = 0;
+                    if(u.winnings === undefined) u.winnings = 0;
+                    if(u.balance === undefined) u.balance = u.deposit + u.winnings;
+                    return u;
+                });
+                renderRealtimeLeaderboard(users);
+            });
+        }
+
+        function renderRealtimeLeaderboard(users) {
+            const top3Container = document.getElementById('lb-top-3-container');
+            const listContainer = document.getElementById('leaderboard-list-rest');
+            top3Container.innerHTML = '';
+            listContainer.innerHTML = '';
+
+            if (users.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; padding:10px; color:#888;">No players found.</div>';
+                return;
+            }
+
+            // Top 3 Logic
+            const top1 = users[0];
+            const top2 = users[1];
+            const top3 = users[2];
+
+            // Render Rank 2 (Left)
+            if (top2) {
+                top3Container.innerHTML += `
+                <div class="top-user rank-2-card">
+                    <i class="fas fa-medal top-rank-badge" style="font-size: 24px;"></i>
+                    <div class="top-avatar" style="border-color: #C0C0C0;">${getInitials(top2.name)}</div>
+                    <div class="top-name">${top2.name}</div>
+                    <div class="top-winnings">₹${top2.balance}</div>
+                </div>`;
+            }
+
+            // Render Rank 1 (Center)
+            if (top1) {
+                top3Container.innerHTML += `
+                <div class="top-user rank-1-card">
+                    <i class="fas fa-trophy top-rank-badge" style="font-size: 32px;"></i>
+                    <div class="top-avatar">${getInitials(top1.name)}</div>
+                    <div class="top-name">${top1.name}</div>
+                    <div class="top-winnings">₹${top1.balance}</div>
+                </div>`;
+            }
+
+            // Render Rank 3 (Right)
+            if (top3) {
+                top3Container.innerHTML += `
+                <div class="top-user rank-3-card">
+                    <i class="fas fa-medal top-rank-badge" style="font-size: 20px;"></i>
+                    <div class="top-avatar" style="border-color: #CD7F32;">${getInitials(top3.name)}</div>
+                    <div class="top-name">${top3.name}</div>
+                    <div class="top-winnings">₹${top3.balance}</div>
+                </div>`;
+            }
+
+            // Render Rest (4 to 50)
+            for (let i = 3; i < users.length; i++) {
+                const u = users[i];
+                listContainer.innerHTML += `
+                <div class="leaderboard-item">
+                    <div class="rank">${i + 1}</div>
+                    <div class="user-info">
+                        <div class="lb-avatar">${getInitials(u.name)}</div>
+                        <div class="lb-name">${u.name}</div>
+                    </div>
+                    <div class="winnings">₹${u.balance}</div>
+                </div>`;
+            }
+
+            // Update "My Rank"
+            if (window.currentUserData) {
+                const myIndex = users.findIndex(u => u.uid === window.currentUserData.uid);
+                if (myIndex !== -1) {
+                    document.getElementById('my-rank-num').innerText = myIndex + 1;
+                    document.getElementById('my-rank-bal').innerText = '₹' + users[myIndex].balance;
+                }
+            }
+        }
+        
+        // --- MATCHES LISTENER ---
+        onSnapshot(collection(db, "matches"), (snapshot) => {
+            const grid = document.getElementById('dynamic-game-grid');
+            
+            grid.innerHTML = ''; 
+            window.matchData = {}; 
+
+            if (snapshot.empty) {
+                grid.innerHTML = '<div style="color:#888; text-align:center; width:100%; grid-column: span 2;">No active matches found.</div>';
+                return;
+            }
+
+            let hasMatches = false;
+            snapshot.forEach(doc => {
+                const m = doc.data();
+                const mId = doc.id;
+                
+                if (!m.type || !m.title) return; 
+                
+                window.matchData[mId] = { ...m, id: mId };
+
+                hasMatches = true;
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.onclick = () => showMatchDetails(mId);
+                
+                const matchType = m.type || ''; 
+                let iconColor = matchType.includes('Solo') ? '#ff4d4d' : (matchType.includes('Duo') ? '#00e676' : '#007bff');
+                let iconClass = matchType.includes('Solo') ? 'fa-user' : (matchType.includes('Duo') ? 'fa-user-friends' : 'fa-users');
+
+                const tagBadge = m.tag ? `<div class="match-tag-badge">${m.tag}</div>` : '';
+
+                card.innerHTML = `
+                    ${tagBadge}
+                    <i class="fas ${iconClass} game-icon" style="color: ${iconColor};"></i>
+                    <div class="game-title">${m.title}</div>
+                    <div class="game-mode-subtext">${m.map} - ${m.type}</div>
+                    <div style="font-size: 10px; color: #ffd700; margin-top: 5px;">Prize: ₹${m.pricePool} | Entry: ₹${m.entryFee}</div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            if(!hasMatches) {
+                 grid.innerHTML = '<div style="color:#888; text-align:center; width:100%; grid-column: span 2;">No matches available right now.</div>';
+            }
+        });
+
+        
+        function renderUserSlider() {
+            const wrapper = document.getElementById('home-slider-wrapper');
+            wrapper.innerHTML = '';
+            
+            const sliders = window.appSettings.sliders.filter(s => s && s.image); 
+            
+            if(sliders.length === 0) {
+                 wrapper.innerHTML = `
+                    <div class="slide-item" style="background-color:#007bff;">Welcome</div>
+                    <div class="slide-item" style="background-color:#ff4d4d;">To Tournament</div>
+                    <div class="slide-item" style="background-color:#00e676;">App</div>
+                 `;
+                 return;
+            }
+
+            const displaySlides = [...sliders];
+            while (displaySlides.length < 3) {
+                displaySlides.push(displaySlides[0]); 
+            }
+
+            displaySlides.slice(0, 3).forEach(slide => {
+                const div = document.createElement('div');
+                div.className = 'slide-item';
+                div.style.backgroundImage = `url('${slide.image}')`;
+                div.innerHTML = `<span>${slide.text || ''}</span>`;
+                
+                if(slide.link) {
+                    div.onclick = () => window.open(slide.link, '_blank');
+                }
+                
+                wrapper.appendChild(div);
+            });
+        }
+
+        // --- AUTHENTICATION LOGIC ---
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        let data = docSnap.data();
+                        // Init undefined fields
+                        if(data.deposit === undefined) data.deposit = 0;
+                        if(data.winnings === undefined) data.winnings = 0;
+                        window.currentUserData = data;
+                        loadUserData();
+                        
+                        initLeaderboardListener();
+                        initNotificationListener(user.uid); // Start Listening for Badges
+                        
+                        if (document.getElementById('welcome-screen').classList.contains('active') ||
+                            document.getElementById('login-screen').classList.contains('active') ||
+                            document.getElementById('signup-screen').classList.contains('active')) {
+                            goToScreen('home-screen');
+                        }
+                    }
+                });
+            } else {
+                window.currentUserData = null;
+                goToScreen('welcome-screen');
+            }
+        });
+
+        window.handleSignup = async () => {
+            const name = document.getElementById('signup-name').value;
+            const contact = document.getElementById('signup-contact').value;
+            const password = document.getElementById('signup-password').value;
+            const referral = document.getElementById('signup-referral').value;
+
+            if(!name || !contact || !password) {
+                alert("Please fill all fields!");
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, contact, password);
+                const user = userCredential.user;
+                
+                let randomNumericID = Math.floor(100000 + Math.random() * 900000);
+
+                let signupBonus = 10; 
+                if(window.appSettings.referral && window.appSettings.referral.signupBonus) {
+                    signupBonus = parseFloat(window.appSettings.referral.signupBonus);
+                }
+                
+                if (referral) {
+                    const usersRef = collection(db, "users");
+                    let q = query(usersRef, where("uid", "==", parseInt(referral)));
+                    let querySnapshot = await getDocs(q);
+                    
+                    if(querySnapshot.empty) {
+                        q = query(usersRef, where("uid", "==", referral));
+                        querySnapshot = await getDocs(q);
+                    }
+
+                    if (!querySnapshot.empty) {
+                        const referrerDoc = querySnapshot.docs[0];
+                        const refBonus = (window.appSettings.referral && window.appSettings.referral.referralBonus) ? parseFloat(window.appSettings.referral.referralBonus) : 20;
+                        
+                        await updateDoc(doc(db, "users", referrerDoc.id), {
+                            winnings: increment(refBonus),
+                            balance: increment(refBonus)
+                        });
+                    }
+                }
+
+                // New User structure with separate balances
+                await setDoc(doc(db, "users", user.uid), {
+                    name: name,
+                    email: contact,
+                    uid: randomNumericID, 
+                    authId: user.uid,     
+                    deposit: 0,
+                    winnings: signupBonus,
+                    balance: signupBonus, // Kept for legacy compatibility
+                    referral: referral,
+                    joinedMatches: []
+                });
+
+                alert("Account Created Successfully! Welcome Bonus Added.");
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        };
+
+        window.handleLogin = async () => {
+            const contact = document.getElementById('login-contact').value;
+            const password = document.getElementById('login-password').value;
+
+            if(!contact || !password) {
+                alert("Please enter email and password");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, contact, password);
+            } catch (error) {
+                alert("Invalid Email or Password: " + error.message);
+            }
+        };
+
+        window.handleLogout = () => {
+            if(confirm("Are you sure you want to logout?")) {
+                signOut(auth).then(() => {
+                    document.getElementById('login-contact').value = '';
+                    document.getElementById('login-password').value = '';
+                });
+            }
+        };
+
+        function loadUserData() {
+            if(!window.currentUserData) return;
+            const user = window.currentUserData;
+            
+            const displayUid = user.uid || user.id || "Error";
+
+            const firstName = user.name ? user.name.split(' ')[0] : 'User';
+            document.getElementById('header-username').textContent = `Hi, ${firstName}`;
+            document.getElementById('menu-username').textContent = user.name || 'User';
+            document.getElementById('menu-avatar').textContent = getInitials(user.name || 'U');
+            document.getElementById('user-uid-display').textContent = displayUid;
+            document.getElementById('profile-name-main').textContent = user.name || 'User';
+            document.getElementById('profile-avatar-main').textContent = getInitials(user.name || 'U');
+            document.getElementById('profile-uid-display').textContent = displayUid;
+            document.getElementById('profile-contact-display').textContent = user.email;
+            document.getElementById('lb-user-name').textContent = `${user.name} (YOU)`;
+            document.getElementById('lb-user-avatar').textContent = getInitials(user.name || 'U');
+            
+            document.getElementById('refer-code-display').textContent = displayUid;
+            const link = (window.appSettings.referral && window.appSettings.referral.appLink) ? window.appSettings.referral.appLink : "https://myapp.com";
+            document.getElementById('refer-link-display').textContent = `${link}?ref=${displayUid}`;
+
+            updateBalanceDisplay();
+        }
+
+        function getInitials(name) {
+            if (!name) return 'U';
+            const names = name.split(' ');
+            let initials = names[0].substring(0, 1).toUpperCase();
+            if (names.length > 1) {
+                initials += names[names.length - 1].substring(0, 1).toUpperCase();
+            }
+            return initials;
+        }
+
+        function updateBalanceDisplay() {
+            if(!window.currentUserData) return;
+            // Calculate Total = Deposit + Winnings
+            const deposit = parseFloat(window.currentUserData.deposit || 0);
+            const winnings = parseFloat(window.currentUserData.winnings || 0);
+            const total = deposit + winnings;
+
+            const balanceElements = document.querySelectorAll('[id^="header-balance"], #recharge-current-balance');
+            balanceElements.forEach(el => {
+                el.textContent = total.toFixed(2).replace(/\.00$/, '');
+            });
+            document.getElementById('wallet-total-balance').textContent = total.toFixed(2);
+            document.getElementById('wallet-winning-balance').textContent = winnings.toFixed(2);
+            document.getElementById('wallet-deposit-balance').textContent = deposit.toFixed(2);
+            document.getElementById('modal-withdraw-bal').textContent = winnings.toFixed(2);
+        }
+
+        // --- REFER & SHARE LOGIC (NEW) ---
+        // Clipboard Fallback Function
+        window.copyToClipboard = (text) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                // Secure context (HTTPS)
+                navigator.clipboard.writeText(String(text)).then(() => alert('Copied!'), () => alert('Failed to copy.'));
+            } else {
+                // Fallback for HTTP
+                let textArea = document.createElement("textarea");
+                textArea.value = String(text);
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Copied!');
+                } catch (err) {
+                    alert('Unable to copy', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        };
+        
+        window.copyReferralCode = () => {
+            const code = document.getElementById('refer-code-display').innerText;
+            window.copyToClipboard(code);
+        }
+        window.copyReferralLink = () => {
+            const link = document.getElementById('refer-link-display').innerText;
+            window.copyToClipboard(link);
+        }
+
+        window.shareToSocial = (platform) => {
+            const refCode = window.currentUserData.uid || "JOIN";
+            const appLinkRaw = (window.appSettings.referral && window.appSettings.referral.appLink) ? window.appSettings.referral.appLink : "https://myapp.com";
+            const finalLink = `${appLinkRaw}?ref=${refCode}`;
+            
+            // CHANGED TO FFW ESPORTS
+            const message = `Hey! Join FFW ESPORTS and earn real money by playing games. Use my code *${refCode}* to get a joining bonus! Download here: ${finalLink}`;
+            const encodedMsg = encodeURIComponent(message);
+            const encodedLink = encodeURIComponent(finalLink);
+
+            if (platform === 'whatsapp') {
+                window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+            } else if (platform === 'telegram') {
+                window.open(`https://t.me/share/url?url=${encodedLink}&text=${encodedMsg}`, '_blank');
+            } else if (platform === 'facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`, '_blank');
+            } else if (platform === 'more') {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'FFW ESPORTS Invite',
+                        text: message,
+                        url: finalLink,
+                    }).catch(console.error);
+                } else {
+                    alert("Sharing not supported on this browser. Link copied!");
+                    window.copyToClipboard(finalLink);
+                }
+            }
+        }
+
+        // --- TRANSACTION HISTORY ---
+        let historyUnsubscribe = null;
+
+        window.loadTransactionHistory = function(type) {
+            document.querySelectorAll('.wallet-history-btn').forEach(b => b.classList.remove('active-history-btn'));
+            if(type === 'deposit') document.querySelector('.wallet-history-btn.deposit').classList.add('active-history-btn');
+            else document.querySelector('.wallet-history-btn.withdrawal').classList.add('active-history-btn');
+
+            const container = document.getElementById('wallet-history-list');
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading...</div>';
+
+            if(historyUnsubscribe) historyUnsubscribe();
+
+            const collectionName = type === 'deposit' ? 'deposit_requests' : 'withdrawal_requests';
+            const q = query(collection(db, collectionName), where("uid", "==", (window.currentUserData.uid || auth.currentUser.uid)));
+
+            historyUnsubscribe = onSnapshot(q, (snapshot) => {
+                const transactions = snapshot.docs.map(doc => doc.data());
+                transactions.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+                if(transactions.length === 0) {
+                     container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No transactions found.</div>';
+                     return;
+                }
+
+                container.innerHTML = '';
+                transactions.forEach(txn => {
+                    let color = '#ffd700'; // Pending (Yellow)
+                    let icon = 'fa-clock';
+                    let statusText = 'Pending';
+                    let amountColor = '#ffd700'; 
+                    let sign = type === 'deposit' ? '+' : '-';
+
+                    if(txn.status === 'success') {
+                        color = '#00e676'; // Success (Green)
+                        icon = 'fa-check-circle';
+                        statusText = 'Successful';
+                        amountColor = '#00e676'; 
+                        if(type === 'withdrawal') amountColor = '#ff4d4d'; 
+                    } else if(txn.status === 'rejected') {
+                        color = '#ff4d4d'; // Rejected (Red)
+                        icon = 'fa-times-circle';
+                        statusText = 'Rejected';
+                        amountColor = '#ff4d4d';
+                    }
+
+                    const dateStr = txn.timestamp ? new Date(txn.timestamp).toLocaleString() : 'N/A';
+
+                    container.innerHTML += `
+                    <div class="transaction-item" style="border-bottom: 1px solid #333; padding: 15px 0;">
+                        <div class="transaction-details">
+                            <div class="title" style="color:white; font-weight:bold; font-size:15px; margin-bottom:4px;">
+                                ${type === 'deposit' ? 'Add Money' : 'Withdrawal Request'}
+                            </div>
+                            <div class="date" style="color:#888; font-size:12px; margin-bottom:5px;">${dateStr}</div>
+                            <div style="color:${color}; font-size:13px; font-weight:bold; display:flex; align-items:center;">
+                                <i class="fas ${icon}" style="margin-right:5px;"></i> ${statusText}
+                            </div>
+                        </div>
+                        <div class="transaction-amount" style="color:${amountColor}; font-size:18px; font-weight:bold;">
+                            ${sign}₹${txn.amount}
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+        
+        // --- NOTIFICATION LOGIC (WITH BADGE & PERSONAL) ---
+        let notifUnsubscribe = null;
+
+        function initNotificationListener(userUid) {
+            // Listen for changes
+            if(notifUnsubscribe) notifUnsubscribe();
+            
+            // Simple query: Get all notifications and filter client-side for "ALL" or "MyUID"
+            // This is safer than complex queries without indexes for now
+            notifUnsubscribe = onSnapshot(collection(db, "notifications"), (snap) => {
+                if(snap.empty) {
+                    updateNotificationBadge(0);
+                    return;
+                }
+                
+                const allNotifs = snap.docs.map(d => d.data());
+                
+                // Filter: Either Target is 'ALL' (Broadcast) OR Target is My UID (Personal)
+                const myNotifs = allNotifs.filter(n => {
+                    return (!n.targetUid || n.targetUid === 'ALL' || n.targetUid === userUid);
+                });
+                
+                // Sort by date desc
+                myNotifs.sort((a,b) => (b.date > a.date) ? 1 : -1);
+                
+                // Badge Logic
+                const lastReadTime = localStorage.getItem('last_notification_read_time') || 0;
+                let unreadCount = 0;
+                
+                if(myNotifs.length > 0) {
+                     const latestNotifTime = new Date(myNotifs[0].date).getTime();
+                     if(latestNotifTime > lastReadTime) {
+                         unreadCount = 1; // Just show dot
+                     }
+                }
+                updateNotificationBadge(unreadCount);
+                
+                // Store globally to render list when opened
+                window.myNotifications = myNotifs;
+            });
+        }
+
+        function updateNotificationBadge(count) {
+             const badges = document.querySelectorAll('.notification-badge');
+             badges.forEach(b => {
+                 b.style.display = (count > 0) ? 'block' : 'none';
+             });
+        }
+
+        window.openNotifications = function() {
+            // Mark as read
+            localStorage.setItem('last_notification_read_time', Date.now());
+            updateNotificationBadge(0);
+
+            goToScreen('notifications-screen');
+            const list = document.getElementById('notification-list');
+            
+            if(!window.myNotifications || window.myNotifications.length === 0) {
+                 list.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No new notifications.</div>';
+                 return;
+            }
+            
+            list.innerHTML = '';
+            
+            window.myNotifications.forEach(n => {
+                const time = n.date ? new Date(n.date).toLocaleDateString() : '';
+                
+                // Style difference for Personal vs Broadcast
+                let borderStyle = 'border-left:4px solid #ffd700;'; // Default Gold
+                let typeTag = '';
+                
+                if(n.targetUid && n.targetUid !== 'ALL') {
+                    borderStyle = 'border-left:4px solid #a371f7;'; // Purple for Personal
+                    typeTag = '<span style="background:#a371f7; padding:2px 6px; border-radius:4px; font-size:10px; color:white; margin-right:5px;">PERSONAL</span>';
+                }
+
+                list.innerHTML += `
+                <div style="background:#1a1a1a; padding:15px; margin-bottom:10px; border-radius:8px; ${borderStyle}">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <div>
+                           ${typeTag}
+                           <strong style="color:#fff; font-size:16px;">${n.title}</strong>
+                        </div>
+                        <small style="color:#888;">${time}</small>
+                    </div>
+                    <div style="color:#ccc; font-size:14px;">${n.body}</div>
+                </div>`;
+            });
+        }
+
+
+        // DOM elements
+        const screens = document.querySelectorAll('.screen');
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        const bottomNavBar = document.getElementById('bottom-nav-bar');
+    
+        // --- Screen Navigation ---
+        function switchScreen(screenId) {
+            screens.forEach(screen => screen.classList.remove('active'));
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) targetScreen.classList.add('active');
+
+             if(['welcome-screen', 'login-screen', 'signup-screen'].includes(screenId)) {
+                bottomNavBar.classList.remove('visible');
+            } else {
+                bottomNavBar.classList.add('visible');
+            }
+        }
+    
+        function setActiveNav(activeItem) {
+            navItems.forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.menu-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if(item.getAttribute('data-screen') === activeItem.getAttribute('data-screen')) {
+                    item.classList.add('active');
+                }
+            });
+            activeItem.classList.add('active');
+        }
+    
+        window.navigateToScreen = (screenId) => {
+            const navItem = document.querySelector(`.menu-nav-item[data-screen="${screenId}"]`);
+            if (navItem) {
+                const bottomNavId = `nav-${screenId.split('-')[0]}`;
+                const bottomNavItem = document.getElementById(bottomNavId);
+                if(bottomNavItem) setActiveNav(bottomNavItem);
+                
+                document.querySelectorAll('.menu-nav-item').forEach(item => item.classList.remove('active'));
+                navItem.classList.add('active'); 
+            }
+            goToScreen(screenId);
+            window.toggleSideMenu(false); 
+        };
+    
+        window.goToScreen = (screenId) => {
+            document.querySelectorAll('.modal-overlay').forEach(el => {
+                // DON'T CLOSE UPDATE MODAL
+                if(el.id !== 'update-modal') el.classList.remove('active');
+            });
+            switchScreen(screenId);
+            updateBalanceDisplay();
+            if(screenId === 'wallet-screen') window.loadTransactionHistory('deposit');
+        };
+    
+        window.toggleSideMenu = (forceState) => {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('side-menu-overlay');
+            const isOpen = menu.classList.contains('open');
+            if (forceState === true || (!isOpen && forceState !== false)) {
+                menu.classList.add('open');
+                overlay.classList.add('active');
+            } else {
+                menu.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        };
+    
+        // --- Show Match Details Logic ---
+        let currentMatchUnsubscribe = null;
+        let lastRoomState = false; 
+
+        window.showMatchDetails = (matchId) => {
+            window.hideSeatSelectionModal();
+            // IMPORTANT: Remove active class from modals EXCEPT update-modal
+            document.querySelectorAll('.modal-overlay').forEach(el => {
+                 if(el.id !== 'update-modal') el.classList.remove('active');
+            });
+
+            window.currentMatchId = matchId;
+            const data = window.matchData[matchId];
+            
+            if(!data) { alert("Match data not found!"); return; }
+
+            document.querySelector('#match-details-screen .header-title').textContent = data.title;
+            document.getElementById('md-image').src = data.gameImage;
+            document.getElementById('md-game-icon').src = data.gameImage; 
+            document.getElementById('md-title').textContent = data.title;
+            document.getElementById('md-date-time').textContent = data.date;
+            document.getElementById('md-prize-pool').textContent = `₹${data.pricePool}`;
+            document.getElementById('md-per-kill').textContent = `₹${data.perKill}`;
+            document.getElementById('md-entry-fee').textContent = `₹${data.entryFee}`;
+            document.getElementById('md-type').textContent = data.type;
+            document.getElementById('md-version').textContent = data.version;
+            document.getElementById('md-map').textContent = data.map;
+            
+            // Set Rules Content
+            const rulesText = data.rules || "No rules specified for this match.";
+            document.getElementById('rules-text-content').innerText = rulesText;
+
+            if (currentMatchUnsubscribe) {
+                currentMatchUnsubscribe(); 
+            }
+
+            const matchRef = doc(db, "matches", matchId);
+            lastRoomState = data.isRoomIDRevealed; 
+
+            currentMatchUnsubscribe = onSnapshot(matchRef, (docSnap) => {
+                if(!docSnap.exists()) return;
+                const mData = docSnap.data();
+                
+                window.matchData[matchId] = { ...mData, id: matchId };
+
+                const bookedSeats = mData.bookedSeats || [];
+                const joined = bookedSeats.length;
+                const capacity = mData.totalSeats;
+                const availableSlots = capacity - joined;
+                const progressPercent = (joined / capacity) * 100;
+                const isUserJoined = window.currentUserData.joinedMatches && window.currentUserData.joinedMatches.includes(matchId);
+
+                if (isUserJoined && !lastRoomState && mData.isRoomIDRevealed) {
+                    alert(`🔔 ALERT: Room ID for "${mData.title}" has been published! Check details now.`);
+                }
+                lastRoomState = mData.isRoomIDRevealed;
+
+                document.getElementById('md-player-progress-bar').style.width = `${progressPercent}%`;
+                document.getElementById('md-player-count').textContent = `${joined}/${capacity}`;
+                document.getElementById('md-players-left-text').textContent = `${availableSlots} slots left`;
+
+                const oldBtn = document.getElementById('md-join-button');
+                const joinButton = oldBtn.cloneNode(true);
+                oldBtn.parentNode.replaceChild(joinButton, oldBtn);
+
+                joinButton.className = 'md-join-button';
+                
+                if (isUserJoined) {
+                    joinButton.textContent = 'JOINED';
+                    joinButton.onclick = function() { showRoomDetails(matchId); };
+                    joinButton.classList.add('joined');
+                    joinButton.disabled = false;
+                } 
+                else if (availableSlots < (mData.teamSize || 1)) {
+                    joinButton.textContent = 'FULL';
+                    joinButton.onclick = null;
+                    joinButton.classList.add('disabled');
+                    joinButton.disabled = true;
+                } 
+                else {
+                    joinButton.textContent = 'JOIN';
+                    joinButton.onclick = function() { window.showSeatSelectionModal(); };
+                    joinButton.classList.add('available');
+                    joinButton.disabled = false;
+                }
+            });
+    
+            goToScreen('match-details-screen');
+        };
+        
+        window.showRulesModal = () => { document.getElementById('rules-modal').classList.add('active'); };
+        window.hideRulesModal = () => { document.getElementById('rules-modal').classList.remove('active'); };
+    
+        function showRoomDetails(matchId) {
+             const data = window.matchData[matchId];
+             
+             document.getElementById('joined-match-title').textContent = data.title;
+             
+             const roomTextDisplay = document.getElementById('joined-room-text-display');
+             const idContainer = document.getElementById('joined-room-id-container');
+             const passContainer = document.getElementById('joined-room-pass-container');
+             const displayId = document.getElementById('display-room-id');
+             const displayPass = document.getElementById('display-room-pass');
+
+             if(data.isRoomIDRevealed) {
+                 roomTextDisplay.style.display = 'none';
+                 idContainer.style.display = 'block';
+                 passContainer.style.display = 'block';
+                 displayId.textContent = data.roomId;
+                 displayPass.textContent = data.roomPass;
+             } else {
+                 roomTextDisplay.style.display = 'block';
+                 roomTextDisplay.textContent = data.roomDetailsText || "Wait for Room ID to be published.";
+                 idContainer.style.display = 'none';
+                 passContainer.style.display = 'none';
+             }
+
+             goToScreen('match-joined-screen');
+        }
+    
+        // --- Seat Selection Logic (UPDATED FOR SQUAD/TEAM BLOCKS) ---
+        window.showSeatSelectionModal = () => { 
+            const data = window.matchData[window.currentMatchId];
+            const bookedSeats = data.bookedSeats || [];
+            const capacity = data.totalSeats;
+            
+            // Force detect Team Size if Admin forgot to update
+            let teamSize = data.teamSize;
+            if (!teamSize) {
+                if (data.type && data.type.includes('Squad')) teamSize = 4;
+                else if (data.type && data.type.includes('Duo')) teamSize = 2;
+                else teamSize = 1;
+            }
+
+            const seatGrid = document.getElementById('seat-grid');
+            const confirmBtn = document.getElementById('confirm-seats-btn');
+    
+            document.getElementById('modal-team-size').textContent = teamSize;
+            document.getElementById('modal-team-size-2').textContent = teamSize;
+            
+            if(teamSize === 1) {
+                document.getElementById('modal-selected-seats-info').innerHTML = `Select any <span style="color: #ffd700; font-weight: bold;">1</span> available seat.`;
+            } else {
+                document.getElementById('modal-selected-seats-info').innerHTML = `Select a starting seat to book a block of <span id="modal-team-size-2" style="color:#ffd700;">${teamSize}</span> seats.`;
+            }
+    
+            confirmBtn.disabled = true;
+            window.selectedSeatBlock = []; 
+    
+            let seatsHtml = [];
+            // Logic to determine if a seat is valid start for a block
+            
+            for (let i = 1; i <= capacity; i++) {
+                const isOccupied = bookedSeats.includes(i);
+                let statusClass = isOccupied ? 'occupied' : 'available';
+                
+                // Determine if this seat can be clicked to start a block selection
+                let canStartBlock = true;
+                
+                // Check if the block fits within capacity
+                if (i + teamSize - 1 > capacity) {
+                     canStartBlock = false;
+                } else {
+                    // Check if any seat in the block is occupied
+                    for (let j = 0; j < teamSize; j++) {
+                        if (bookedSeats.includes(i + j)) {
+                            canStartBlock = false;
+                            break;
+                        }
+                    }
+                }
+
+                // If occupied, obviously can't start block
+                if(isOccupied) canStartBlock = false;
+
+                // OnClick passes current seat and teamSize
+                const clickAction = (canStartBlock) ? `onclick="selectSeatBlock(${i}, ${teamSize})"` : 'disabled';
+                
+                // Visual helper: Disable seats that can't form a full team even if empty
+                if(!isOccupied && !canStartBlock && teamSize > 1) {
+                     // Optionally style these differently, currently standard disabled
+                }
+
+                seatsHtml.push(`
+                    <button class="seat-btn ${statusClass}" ${clickAction} data-seat-number="${i}">
+                        ${i}
+                    </button>
+                `);
+            }
+            
+            seatGrid.innerHTML = seatsHtml.join('');
+            document.getElementById('seat-selection-modal').classList.add('active');
+        };
+    
+        // NEW FUNCTION: Selects a block of seats at once
+        window.selectSeatBlock = (startSeat, teamSize) => {
+            const seatGrid = document.getElementById('seat-grid');
+            const allSeats = seatGrid.querySelectorAll('.seat-btn');
+            const confirmBtn = document.getElementById('confirm-seats-btn');
+    
+            // Clear previous selection
+            allSeats.forEach(seat => {
+                if (!seat.classList.contains('occupied')) {
+                    seat.classList.remove('selected');
+                }
+            });
+    
+            window.selectedSeatBlock = [];
+    
+            // Select the block
+            for (let i = 0; i < teamSize; i++) {
+                const seatNumber = startSeat + i;
+                const seatElement = seatGrid.querySelector(`[data-seat-number="${seatNumber}"]`);
+                
+                if (seatElement && !seatElement.classList.contains('occupied')) {
+                    seatElement.classList.add('selected');
+                    window.selectedSeatBlock.push(seatNumber);
+                }
+            }
+            
+            // Validate Logic
+            if (window.selectedSeatBlock.length === teamSize) {
+                confirmBtn.disabled = false;
+                document.getElementById('modal-selected-seats-info').innerHTML = `Selected Seats: <span style="color: #ffd700; font-weight: bold;">${window.selectedSeatBlock.join(', ')}</span>`;
+            } else {
+                // Should not happen due to HTML generation logic, but safeguard
+                confirmBtn.disabled = true;
+                alert("Cannot select broken block of seats.");
+                window.selectedSeatBlock = [];
+            }
+        };
+    
+        window.goToFormFromSeats = () => {
+            const data = window.matchData[window.currentMatchId];
+            if (window.selectedSeatBlock.length === 0) {
+                alert("Please select a valid block of seats.");
+                return;
+            }
+            document.getElementById('join-form-match-title').textContent = data.title;
+            document.getElementById('join-form-match-info').innerHTML = `Entry Fee: <span style="color: #ffd700;">₹${data.entryFee}.00</span> | Seats: <span style="color: #007bff;">${window.selectedSeatBlock.join(', ')}</span>`;
+            document.getElementById('selected-seats-text').textContent = window.selectedSeatBlock.join(', ');
+    
+            window.hideSeatSelectionModal();
+            goToScreen('match-join-form-screen');
+        };
+    
+        window.hideSeatSelectionModal = () => {
+            document.getElementById('seat-selection-modal').classList.remove('active');
+        };
+    
+        window.processJoin = async (matchId) => {
+            const data = window.matchData[matchId];
+            const gameUid = document.getElementById('game-uid').value;
+            const username = document.getElementById('username').value;
+            
+            if (!gameUid || !username) {
+                alert('Please fill in your Game UID and Username.');
+                return;
+            }
+
+            const currentDeposit = parseFloat(window.currentUserData.deposit || 0);
+            const currentWinnings = parseFloat(window.currentUserData.winnings || 0);
+            const total = currentDeposit + currentWinnings;
+
+            if (total < data.entryFee) {
+                alert(`Insufficient total balance. Please recharge ₹${(data.entryFee - total).toFixed(2)} to join.`);
+                return;
+            }
+    
+            try {
+                // Logic to deduct from Deposit first, then Winnings
+                let remainingFee = data.entryFee;
+                let deductDeposit = 0;
+                let deductWinnings = 0;
+
+                if (currentDeposit >= remainingFee) {
+                    deductDeposit = remainingFee;
+                } else {
+                    deductDeposit = currentDeposit;
+                    remainingFee -= currentDeposit;
+                    deductWinnings = remainingFee;
+                }
+                
+                const userAuthId = auth.currentUser.uid;
+                const userNumericId = window.currentUserData.uid || "N/A";
+
+                // 1. Deduct Balance from User
+                const userRef = doc(db, "users", userAuthId);
+                await updateDoc(userRef, {
+                    deposit: increment(-deductDeposit),
+                    winnings: increment(-deductWinnings),
+                    balance: increment(-(deductDeposit + deductWinnings)), // Update total
+                    joinedMatches: arrayUnion(matchId)
+                });
+
+                // 2. Add Participant Details & Seats to Match (NEW LOGIC)
+                const participantObj = {
+                    userId: userAuthId,            // System ID for refunds
+                    displayUid: userNumericId,     // 6 Digit ID for search
+                    name: window.currentUserData.name || "User",
+                    gameName: username,            // From Input
+                    gameUid: gameUid,              // From Input
+                    seats: window.selectedSeatBlock,
+                    paid: data.entryFee
+                };
+
+                const matchRef = doc(db, "matches", matchId);
+                
+                // Add seat numbers AND add full details to participants array
+                await updateDoc(matchRef, {
+                    bookedSeats: arrayUnion(...window.selectedSeatBlock),
+                    participants: arrayUnion(participantObj)
+                });
+
+                // Success UI Updates
+                document.getElementById('joined-seats-list').textContent = window.selectedSeatBlock.join(', ');
+                
+                const roomTextDisplay = document.getElementById('joined-room-text-display');
+                const idContainer = document.getElementById('joined-room-id-container');
+                const passContainer = document.getElementById('joined-room-pass-container');
+                const displayId = document.getElementById('display-room-id');
+                const displayPass = document.getElementById('display-room-pass');
+
+                document.getElementById('joined-match-title').textContent = data.title;
+
+                if(data.isRoomIDRevealed) {
+                    roomTextDisplay.style.display = 'none';
+                    idContainer.style.display = 'block';
+                    passContainer.style.display = 'block';
+                    displayId.textContent = data.roomId;
+                    displayPass.textContent = data.roomPass;
+                } else {
+                    roomTextDisplay.style.display = 'block';
+                    roomTextDisplay.textContent = data.roomDetailsText || "Wait for Room ID";
+                    idContainer.style.display = 'none';
+                    passContainer.style.display = 'none';
+                }
+        
+                window.selectedSeatBlock = [];
+                document.getElementById('game-uid').value = '';
+                document.getElementById('username').value = '';
+        
+                goToScreen('match-joined-screen');
+
+            } catch (e) {
+                alert("Error joining match: " + e.message);
+            }
+        };
+    
+        window.showWithdrawalModal = () => { document.getElementById('withdrawal-modal').classList.add('active'); };
+        window.hideWithdrawalModal = () => { document.getElementById('withdrawal-modal').classList.remove('active'); };
+        
+        window.submitWithdrawal = async () => {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const details = document.getElementById('withdraw-details').value;
+
+            if(!details) {
+                alert("Please enter UPI ID or Phone Number");
+                return;
+            }
+
+            if (isNaN(amount) || amount < 50) {
+                alert('Minimum withdrawal amount is ₹50.');
+                return;
+            }
+            // Check only against winnings
+            if(amount > window.currentUserData.winnings) {
+                alert("Insufficient Winnings balance! You can only withdraw winnings.");
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                await updateDoc(userRef, {
+                    winnings: increment(-amount),
+                    balance: increment(-amount) // Update total
+                });
+
+                await addDoc(collection(db, "withdrawal_requests"), {
+                    uid: (window.currentUserData.uid || auth.currentUser.uid), 
+                    userName: window.currentUserData.name || "User",
+                    email: window.currentUserData.email || "No Email",
+                    amount: amount,
+                    method: details,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+
+                alert(`Withdrawal of ₹${amount.toFixed(2)} submitted! Funds deducted from winnings. Wait for admin approval.`);
+                hideWithdrawalModal();
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+        
+        // window.copyToClipboard moved up
+    
+        window.goToRechargeStep = (step) => {
+            if (step === 1) {
+                goToScreen('recharge-step-1');
+                document.getElementById('custom-recharge-amount').value = window.currentRechargeAmount;
+            } else if (step === 2) {
+                const val = parseInt(document.getElementById('custom-recharge-amount').value);
+                if (val >= 10 && val <= 1000) window.currentRechargeAmount = val;
+                else { alert('Amount must be between 10 and 1000'); return; }
+                document.getElementById('display-recharge-amount-2').textContent = window.currentRechargeAmount;
+                goToScreen('recharge-step-2');
+            } else if (step === 3) {
+                const selectedMethod = document.querySelector('#recharge-step-2 .payment-method.selected').getAttribute('data-method');
+                const paymentModeEl = document.getElementById('payment-mode-display');
+                const upiIdEl = document.getElementById('upi-id-display');
+                const qrCodeImgEl = document.getElementById('qr-code-image');
+
+                const payments = window.appSettings.payments || {};
+
+                let details = { mode: 'PhonePe', upi: 'Not Set', qr: '' };
+                
+                if(selectedMethod === 'phonepe' && payments.phonepe) {
+                    details = { mode: 'PhonePe', upi: payments.phonepe.upi, qr: payments.phonepe.qr };
+                } else if(selectedMethod === 'paytm' && payments.paytm) {
+                    details = { mode: 'Paytm', upi: payments.paytm.upi, qr: payments.paytm.qr };
+                } else if(selectedMethod === 'gpay' && payments.gpay) {
+                    details = { mode: 'GPay', upi: payments.gpay.upi, qr: payments.gpay.qr };
+                }
+                
+                paymentModeEl.textContent = details.mode;
+                upiIdEl.textContent = details.upi;
+                qrCodeImgEl.src = details.qr || 'https://placehold.co/150x150/png?text=No+QR';
+
+                document.getElementById('display-recharge-amount-3').textContent = window.currentRechargeAmount;
+                goToScreen('recharge-step-3');
+            }
+        };
+
+        window.submitRecharge = async () => {
+            const utr = document.getElementById('utr-input').value;
+            
+            if(!utr || utr.length < 5) {
+                alert("Please enter a valid UTR number.");
+                return;
+            }
+
+            try {
+                // Get Auth ID and Numeric UID
+                const authId = auth.currentUser.uid;
+                const numericUid = window.currentUserData.uid || authId;
+
+                await addDoc(collection(db, "deposit_requests"), {
+                    uid: numericUid,  // Display UID
+                    userDocId: authId, // Actual Firestore Document ID for fast update
+                    userName: window.currentUserData.name || "User",
+                    email: window.currentUserData.email || "No Email",
+                    phone: window.currentUserData.phone || "", 
+                    amount: window.currentRechargeAmount,
+                    utr: utr,
+                    timestamp: Date.now(),
+                    status: "pending"
+                });
+
+                alert('Deposit Request Sent! Please wait for Admin approval.');
+                
+                document.getElementById('utr-input').value = "";
+                goToScreen('wallet-screen');
+
+            } catch (e) {
+                console.error(e);
+                alert("Error sending request: " + e.message);
+            }
+        };
+    
+        // Event Listeners
+        document.querySelectorAll('#recharge-step-1 .amount-option-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#recharge-step-1 .amount-option-btn').forEach(b => b.classList.remove('selected'));
+                e.currentTarget.classList.add('selected');
+                window.currentRechargeAmount = parseInt(e.currentTarget.getAttribute('data-amount'));
+                document.getElementById('custom-recharge-amount').value = window.currentRechargeAmount;
+            });
+        });
+        document.getElementById('recharge-step-1-next').addEventListener('click', () => goToRechargeStep(2));
+        document.querySelectorAll('#recharge-step-2 .payment-method').forEach(m => {
+            m.addEventListener('click', (e) => {
+                document.querySelectorAll('#recharge-step-2 .payment-method').forEach(x => x.classList.remove('selected'));
+                e.currentTarget.classList.add('selected');
+            });
+        });
+        document.getElementById('recharge-step-2-next').addEventListener('click', () => goToRechargeStep(3));
+    
+        let slideIndex = 0;
+        const slides = document.getElementById('home-slider-wrapper');
+        if (slides) {
+            setInterval(() => {
+                slideIndex = (slideIndex + 1) % 3;
+                slides.style.transform = `translateX(-${slideIndex * 33.33}%)`;
+            }, 4000);
+        }
+        
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                goToScreen(e.currentTarget.getAttribute('data-screen'));
+            });
+        });
+
+    </script>
+</body>
+</html>
